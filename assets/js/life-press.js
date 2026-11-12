@@ -49,10 +49,11 @@
   const K      = 30;     /* smooth-union radius, css px */
   const BUCKET = 96;     /* css px: the grid that sorts bodies by where they can reach */
   /* Phones: the text column fills the screen, so there are no margins to
-     print in. The canvas becomes a masthead band above the name instead
-     (styles.css), printed edge to edge and scrolled away with the page. */
+     keep the ink in. The press prints over the whole screen instead,
+     smaller dots, and styles.css fades the sheet so the text stays first. */
   const phone = window.matchMedia('(max-width:620px)');
   let narrow = phone.matches;
+  const SOFT = 0.55;     /* phones: share of the dot size left, everywhere */
 
   let W = 0, H = 0, DPR = 1, inkA = '#14140f', inkB = '#d23a1c';
   let colL = 0, colR = 0;
@@ -252,7 +253,7 @@
 
   /* the column guard: full ink in the margins, a ghost over the text */
   function guard(x, y, ghost) {
-    if (narrow) return Math.min(1, Math.max(0, (H - y) / 28));   /* soft lower edge of the band */
+    if (narrow) return SOFT;
     if (colR <= colL) return 1;
     const out = Math.max(colL - x, x - colR, 0);      /* px outside the text column */
     if (out <= CLEAR) return ghost;
@@ -262,7 +263,7 @@
   function size() {
     narrow = phone.matches;
     W = window.innerWidth;
-    H = narrow ? (cv.getBoundingClientRect().height || 130) : window.innerHeight;
+    H = window.innerHeight;
     DPR = Math.min(window.devicePixelRatio || 1, 1.5);
     cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
     const cs = getComputedStyle(cv);
@@ -332,7 +333,7 @@
           const d = field(sx, sy, P, t, reach, pl.grow, near) - pl.grow;
           let cov = d > FALL ? 0 : Math.min(1, 1 - d / FALL);
           /* loose grain on the empty sheet, but none within 150px of the text */
-          const stray = narrow ? 0.3 : Math.max(colL - x, x - colR, 0) < 150 ? 0 : 0.3;
+          const stray = narrow ? 0 : Math.max(colL - x, x - colR, 0) < 150 ? 0 : 0.3;
           cov += (grain() - 0.5) * 0.2 * (cov > 0.02 ? 1 : stray);
           cov *= guard(x, y, GHOST[k]);
           if (cov <= 0.03) continue;
