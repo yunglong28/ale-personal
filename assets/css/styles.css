@@ -461,5 +461,9 @@ footer a:hover { border-color:var(--accent); color:var(--accent); }
 /* phones: no margins to print in, so the press runs behind the text,
    faded right down so reading comes first (life-press.js) */
 @media (max-width:620px) {
-  .press { opacity:0.28; }
+  .press { opacity:0.45; }                       /* light: the sheet can take more ink */
+  :root[data-theme="dark"] .press { opacity:0.28; }
+}
+@media (max-width:620px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .press { opacity:0.28; }
 }
