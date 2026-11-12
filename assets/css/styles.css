@@ -1,0 +1,459 @@
+/* =========================================================
+   ALESSANDRO Y. LONGO — minimal / post-cyber
+   One page. A name, a filter, a list. Nothing else.
+   ========================================================= */
+
+/* ---------- fonts (self-hosted) ---------- */
+@font-face { font-family:'Public Sans'; font-weight:400; font-style:normal; font-display:swap;
+  src:url('../fonts/PublicSans-Regular.otf') format('opentype'); }
+@font-face { font-family:'Public Sans'; font-weight:400; font-style:italic; font-display:swap;
+  src:url('../fonts/PublicSans-Italic.otf') format('opentype'); }
+@font-face { font-family:'Public Sans'; font-weight:500; font-style:normal; font-display:swap;
+  src:url('../fonts/PublicSans-Medium.otf') format('opentype'); }
+@font-face { font-family:'Public Sans'; font-weight:600; font-style:normal; font-display:swap;
+  src:url('../fonts/PublicSans-SemiBold.otf') format('opentype'); }
+
+/* Redaction — used only for the name, as a single degraded accent */
+@font-face { font-family:'Redaction 20'; font-weight:400; font-style:normal; font-display:swap;
+  src:url('../fonts/Redaction20-Regular.woff') format('woff'), url('../fonts/Redaction20-Regular.otf') format('opentype'); }
+
+/* PP NeueBit — the small voice: ticks, years, meta, nav */
+@font-face { font-family:'PP NeueBit'; font-weight:400; font-style:normal; font-display:swap;
+  src:url('../fonts/PPNeueBit-Regular.woff') format('woff'), url('../fonts/PPNeueBit-Regular.otf') format('opentype'); }
+@font-face { font-family:'PP NeueBit'; font-weight:700; font-style:normal; font-display:swap;
+  src:url('../fonts/PPNeueBit-Bold.woff') format('woff'), url('../fonts/PPNeueBit-Bold.otf') format('opentype'); }
+
+/* PP Mondwest — held in reserve, one step warmer than NeueBit */
+@font-face { font-family:'PP Mondwest'; font-weight:400; font-style:normal; font-display:swap;
+  src:url('../fonts/PPMondwest-Regular.woff') format('woff'), url('../fonts/PPMondwest-Regular.otf') format('opentype'); }
+
+/* ---------- tokens ---------- */
+:root {
+  --bg:      #f3f2ee;
+  --fg:      #14140f;
+  --dim:     #6b695f;   /* 4.9:1 on --bg */
+  --faint:   #8a887d;   /* counts only, never information */
+  --line:    #d9d7cd;
+  --accent:  #b3311b;   /* text red, 5.6:1 — the press keeps the brighter --ink-b */
+  --cell:    #a9a79b;   /* game-of-life: settled cells, light grey */
+  --ink-a:   #14140f;   /* the header band, first plate (life-press.js) */
+  --ink-b:   #d23a1c;   /* the header band, second plate */
+
+  --sans:  'Public Sans', system-ui, -apple-system, Segoe UI, sans-serif;
+  --ui:    'Public Sans', system-ui, -apple-system, Segoe UI, sans-serif;   /* was PP NeueBit: too small to read */
+  --disp:  'Redaction 20', 'Public Sans', Georgia, serif;
+
+  --w:     760px;
+  /* PP NeueBit runs tiny for its em — these are the sizes at which it reads.
+     Two steps: --tick for the record lines, --tick-l for tagline + nav. */
+  --tick:  0.8125rem;   /* 13px: years, meta, footer */
+  --tick-l:0.9375rem;   /* 15px: nav, summaries, switch */
+}
+
+/* dark: with the system, unless light was chosen on the page; or when dark was chosen */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:    #0c0c0a;
+    --fg:    #eae9e2;
+    --dim:   #918e84;
+    --faint: #7a776d;
+    --line:  #23231e;
+    --accent:#ff5a2e;
+    --cell:  #8b887e;
+    --ink-a: #6f6c63;
+    --ink-b: #ff5a2e;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:    #0c0c0a;
+  --fg:    #eae9e2;
+  --dim:   #918e84;
+  --faint: #7a776d;
+  --line:  #23231e;
+  --accent:#ff5a2e;
+  --cell:  #8b887e;
+  --ink-a: #6f6c63;
+  --ink-b: #ff5a2e;
+}
+
+/* ---------- reset ---------- */
+*, *::before, *::after { box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.5;
+  font-feature-settings:'kern' 1;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+a { color:inherit; text-decoration:none; }
+::selection { background:var(--accent); color:var(--bg); }
+
+.wrap {
+  max-width:var(--w);
+  margin:0 auto;
+  padding:clamp(1.5rem, 5vw, 4rem) 1.4rem 6rem;
+}
+
+/* ---------- header ---------- */
+header { margin-bottom:3.2rem; }
+
+
+.name {
+  font-family:var(--disp);
+  font-weight:400;
+  font-size:clamp(2.4rem, 8vw, 4.2rem);
+  line-height:0.98;
+  letter-spacing:-0.01em;
+  margin:0 0 0.9rem;
+}
+.tag {
+  font-family:var(--ui);
+  font-size:var(--tick-l);
+  line-height:1.3;
+  letter-spacing:0.01em;
+  color:var(--dim);
+  text-transform:lowercase;
+  margin:0 0 1.8rem;
+  max-width:46ch;
+}
+.tag a { color:var(--fg); border-bottom:1px solid var(--line); }
+.tag a:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ---------- game of life ---------- */
+/* A field, not a box: the canvas breaks out of the column and runs the full
+   width of the viewport, masked to nothing at both ends so it has no edges.
+   Cells are 4px on a torus. The rule and the seed change every few seconds,
+   swept in by a ragged wavefront — see life.js. */
+.life {
+  display:block;
+  width:100vw;
+  max-width:100vw;
+  margin-left:calc(50% - 50vw);
+  height:132px;
+  -webkit-mask-image:linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%);
+          mask-image:linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%);
+}
+/* the top band starts at the very edge of the page and dies out before the
+   name; the bottom one is its mirror, growing back in under the footer */
+.life--top {
+  margin-top:calc(-1 * clamp(1.5rem, 5vw, 4rem));
+  margin-bottom:2.4rem;
+  -webkit-mask-image:linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%),
+                     linear-gradient(to top, transparent 0%, #000 70%);
+          mask-image:linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%),
+                     linear-gradient(to top, transparent 0%, #000 70%);
+  -webkit-mask-composite:source-in;
+          mask-composite:intersect;
+}
+.life--bottom {
+  margin-top:3rem;
+  margin-bottom:-6rem;
+  height:120px;
+  -webkit-mask-image:linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%),
+                     linear-gradient(to bottom, transparent 0%, #000 70%);
+          mask-image:linear-gradient(to right, transparent 0%, #000 18%, #000 82%, transparent 100%),
+                     linear-gradient(to bottom, transparent 0%, #000 70%);
+  -webkit-mask-composite:source-in;
+          mask-composite:intersect;
+}
+@media (max-width:620px) { .life { height:96px; margin-bottom:1.8rem; } }
+@media (prefers-reduced-motion:reduce) { .life { opacity:0.7; } }
+
+/* ---------- filter nav ---------- */
+.filter {
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.35rem 1.1rem;
+  font-family:var(--ui);
+  font-size:var(--tick-l);
+  line-height:1.2;
+  letter-spacing:0.02em;
+  text-transform:lowercase;
+  padding-top:1.1rem;
+  border-top:1px solid var(--line);
+}
+.filter button {
+  appearance:none;
+  background:none;
+  border:0;
+  padding:0;
+  margin:0;
+  font:inherit;
+  color:var(--dim);
+  cursor:pointer;
+  position:relative;
+  transition:color .15s ease;
+}
+.filter button:hover { color:var(--fg); }
+.filter button[aria-current="true"] { color:var(--fg); }
+.filter button[aria-current="true"]::after {
+  content:'';
+  position:absolute;
+  left:0; right:0; bottom:-0.35em;
+  height:2px;
+  background:var(--accent);
+}
+.filter .n { color:var(--faint); }
+
+/* ---------- list ---------- */
+main { margin-top:2.4rem; }
+
+.list { list-style:none; margin:0; padding:0; }
+.list li { border-top:1px solid var(--line); }
+.list li:last-child { border-bottom:1px solid var(--line); }
+
+.row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  grid-template-areas:
+    "title year"
+    "meta  meta";
+  gap:0.15rem 1rem;
+  align-items:baseline;
+  padding:0.85rem 0;
+  transition:padding-left .18s ease, background .18s ease;
+}
+a.row:hover { padding-left:0.7rem; }
+a.row:hover .t { color:var(--accent); }
+
+.t {
+  grid-area:title;
+  font-weight:500;
+  font-size:1.02rem;
+  letter-spacing:-0.005em;
+  transition:color .15s ease;
+}
+.t em { font-style:italic; font-weight:400; }
+
+.y {
+  grid-area:year;
+  font-family:var(--ui);
+  font-size:var(--tick);
+  color:var(--dim);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.meta {
+  grid-area:meta;
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.35rem 0.9rem;
+  font-family:var(--ui);
+  font-size:var(--tick);
+  line-height:1.2;
+  color:var(--dim);
+}
+.meta .ty {
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--dim);
+}
+.meta .w { color:var(--dim); }
+/* artworks keep their kind, and say it plainly, in both modes */
+li[data-cat="art"] .meta .ty { color:var(--fg); }
+.meta .flag { color:var(--accent); }
+
+/* count line */
+.count {
+  font-family:var(--ui);
+  font-size:var(--tick);
+  color:var(--faint);
+  text-transform:lowercase;
+  margin:1.6rem 0 0;
+}
+
+/* ---------- about panel ---------- */
+/* Two columns rather than a float: the prose keeps one measure the whole way
+   down, and the portrait sits beside its first paragraph instead of carving a
+   notch out of the text. */
+.about { display:none; max-width:56ch; }
+.about.on {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(190px, 32%, 244px);
+  gap:0 2.2rem;
+  align-items:start;
+  max-width:none;
+}
+.about.on > p { grid-column:1; }
+.about.on > .portrait { grid-column:2; grid-row:1 / span 4; margin-top:0.3rem; }
+.list.off, .count.off { display:none; }
+
+/* ---------- portrait ---------- */
+/* At rest, the photograph. On hover a field of cells runs over it and every
+   live cell redraws its patch of the picture as one flat, slightly brighter
+   block — spread across the whole frame, and churning for as long as the
+   pointer stays. See portrait.js. Nothing sweeps past; nothing plays once. */
+.portrait { margin:0; padding:0; }
+.portrait__frame {
+  position:relative;
+  overflow:hidden;
+  aspect-ratio:840 / 805;
+  background:var(--line);
+  border:1px solid var(--line);
+}
+.portrait img {
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:grayscale(1) contrast(1.02);
+  transition:filter .3s ease;
+}
+
+/* the second photograph, drawn sharp into the cells that have switched to it */
+.portrait__alt {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+/* the blocks show only while one photograph is turning into the other */
+.portrait__frame.is-mutating .portrait__px { opacity:1; }
+
+/* one canvas pixel to a cell, blown up by the browser — nearest neighbour,
+   so the blocks keep hard edges instead of blurring into the photo */
+.portrait__px {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  image-rendering:pixelated;
+  -ms-interpolation-mode:nearest-neighbor;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .22s ease;
+}
+
+
+.portrait figcaption {
+  font-family:var(--ui);
+  font-size:var(--tick);
+  line-height:1.2;
+  color:var(--faint);
+  text-align:right;
+  padding-top:0.35rem;
+  transition:color .25s ease;
+}
+
+@media (max-width:620px) {
+  .about.on { display:block; max-width:56ch; }
+  .about.on > .portrait { width:100%; max-width:300px; margin:0 0 1.6rem; }
+  .portrait figcaption { text-align:left; }
+}
+
+.about p { margin:0 0 1.1rem; font-size:1.04rem; line-height:1.6; }
+.about p strong { font-weight:600; }
+.about p em { font-style:italic; }
+
+/* ---------- footer ---------- */
+footer {
+  margin-top:4rem;
+  padding-top:1.4rem;
+  border-top:1px solid var(--line);
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.4rem 1.6rem;
+  font-family:var(--ui);
+  font-size:var(--tick);
+  color:var(--dim);
+  text-transform:lowercase;
+}
+footer a { color:var(--fg); border-bottom:1px solid var(--line); }
+footer a:hover { border-color:var(--accent); color:var(--accent); }
+
+@media (max-width:520px) {
+  .row { grid-template-columns:1fr auto; }
+  .t { font-size:0.98rem; }
+}
+
+/* ---------- archive ---------- */
+/* the older and minor writings, folded under the selected ones */
+.archive { margin-top:2.4rem; }
+.archive.off { display:none; }
+.archive summary {
+  font-family:var(--ui);
+  font-size:var(--tick-l);
+  color:var(--dim);
+  cursor:pointer;
+  list-style:none;
+  padding:0.4rem 0;
+}
+.archive summary::-webkit-details-marker { display:none; }
+.archive summary::before { content:'+ '; }
+.archive[open] summary::before { content:'– '; }
+.archive summary:hover { color:var(--fg); }
+.archive .n { color:var(--faint); }
+.archive .list { margin-top:0.8rem; }
+
+/* the press version (preview-press.html): one opaque canvas, no blocks */
+.portrait__frame.is-pressed .portrait__px { display:none; }
+.portrait__frame.is-pressed { background:#f4f4f2; }
+
+/* ---------- the press: one field behind the whole screen (life-press.js) ---------- */
+.press {
+  position:fixed;
+  inset:0;
+  width:100vw;
+  height:100vh;
+  z-index:0;
+  pointer-events:none;
+}
+.wrap { position:relative; z-index:1; }
+
+/* ---------- light / dark switch (theme.js) ---------- */
+.theme {
+  position:absolute;
+  top:clamp(1.5rem, 5vw, 4rem);
+  right:1.4rem;
+  padding:0;
+  border:0;
+  background:none;
+  font-family:var(--ui);
+  font-size:var(--tick-l);
+  line-height:1;
+  color:var(--dim);
+  cursor:pointer;
+}
+.theme:hover, .theme:focus-visible { color:var(--accent); }
+
+/* ---------- about: the extended bio, folded ---------- */
+.about .extended { grid-column:1; margin:0 0 1.1rem; }
+.extended summary {
+  font-family:var(--ui);
+  font-size:var(--tick-l);
+  color:var(--dim);
+  cursor:pointer;
+  list-style:none;
+  padding:0.2rem 0;
+}
+.extended summary::-webkit-details-marker { display:none; }
+.extended summary::before { content:'+ '; }
+.extended[open] summary::before { content:'– '; }
+.extended summary:hover { color:var(--accent); }
+.extended[open] summary { margin-bottom:0.8rem; }
+
+/* ---------- about: the "currently" line ---------- */
+.about .currently {
+  grid-column:1;
+  margin:0 0 0.3rem;
+  font-family:var(--ui);
+  font-size:var(--tick-l);
+  color:var(--dim);
+}
+
+/* a link inside running text: underlined, so it reads as one */
+.about a.inline { color:inherit; text-decoration:underline; text-decoration-color:var(--accent); text-underline-offset:0.18em; }
+.about a.inline:hover { color:var(--accent); }
+
+/* narrow screens: the switch sits above the name instead of over it */
+@media (max-width:620px) {
+  .theme { top:0.9rem; }
+  header { padding-top:1.5rem; }
+}

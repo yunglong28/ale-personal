@@ -1,0 +1,46 @@
+# Publish the site and nothing else: everything is ignored except the
+# files listed below. The rest of this folder (CV, originals, videos,
+# backups, experiments) stays on this computer and never reaches GitHub.
+/*
+!/.gitignore
+!/.nojekyll
+!/README.md
+!/CNAME
+!/index.html
+!/favicon.ico
+!/favicon-32.png
+!/apple-touch-icon.png
+!/icon-512.png
+
+!/assets/
+/assets/*
+!/assets/css/
+/assets/css/*
+!/assets/css/styles.css
+!/assets/js/
+/assets/js/*
+!/assets/js/main.js
+!/assets/js/theme.js
+!/assets/js/portrait.js
+!/assets/js/life-press.js
+!/assets/js/press-figures.js
+!/assets/fonts/
+/assets/fonts/*
+!/assets/fonts/PublicSans-Regular.otf
+!/assets/fonts/PublicSans-Italic.otf
+!/assets/fonts/PublicSans-Medium.otf
+!/assets/fonts/PublicSans-SemiBold.otf
+!/assets/fonts/Redaction20-Regular.woff
+!/assets/fonts/Redaction20-Regular.otf
+!/assets/fonts/PPNeueBit-Regular.woff
+!/assets/fonts/PPNeueBit-Bold.woff
+!/assets/fonts/PPMondwest-Regular.woff
+
+!/media/
+/media/*
+!/media/img/
+/media/img/*
+!/media/img/portrait-jan26.jpg
+!/media/img/portrait-artist.jpg
+
+.DS_Store
