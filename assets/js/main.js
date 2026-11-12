@@ -43,3 +43,12 @@
   window.addEventListener('hashchange', () => apply(location.hash.slice(1) || 'about'));
   apply(location.hash.slice(1) || 'about');
 })();
+
+/* every link that leaves the site opens in a new tab, including ones added later */
+(() => {
+  for (const a of document.querySelectorAll('a[href^="http"]')) {
+    if (a.hostname === location.hostname) continue;
+    a.target = '_blank';
+    a.rel = (a.rel + ' noopener').trim();
+  }
+})();

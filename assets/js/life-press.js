@@ -48,6 +48,12 @@
   const CLEAR  = 56;     /* css px of margin kept as quiet as the column itself */
   const K      = 30;     /* smooth-union radius, css px */
   const BUCKET = 96;     /* css px: the grid that sorts bodies by where they can reach */
+  /* Phones: the text column fills the screen, so there are no margins to
+     print in. The press keeps a thin, quiet strip at the top and bottom
+     edge of the screen instead, at the low frame rate. */
+  const BAND   = 18;     /* css px of full ink from the screen edge */
+  const BAND_FADE = 16;  /* css px over which it fades out towards the text */
+  let narrow = false;
 
   let W = 0, H = 0, DPR = 1, inkA = '#14140f', inkB = '#d23a1c';
   let colL = 0, colR = 0;
@@ -98,6 +104,15 @@
     const S = strips();
     return bodies.map((b, i) => {
       const r = b.r * (0.8 + nA(b.ph + 9, t / 4500) * 0.5);
+      if (narrow && i < 4) {
+        /* two bubbles along each edge, sliding back and forth */
+        const top = i % 2 === 0;
+        return {
+          x: -20 + tri(b.x0 + t * 0.000006 * (1 + i * 0.4)) * (W + 40),
+          y: (top ? 4 : H - 4) + (nB(b.ph, t / 5000) - 0.5) * 16,
+          r: 16 + r * 0.25, ry: b.ry,
+        };
+      }
       if (i < KEEP && S.length) {
         const [a0, a1] = S[i % S.length];
         const m = Math.min(r * 1.1, (a1 - a0) / 2);
@@ -246,7 +261,11 @@
   }
 
   /* the column guard: full ink in the margins, a ghost over the text */
-  function guard(x, ghost) {
+  function guard(x, y, ghost) {
+    if (narrow) {
+      const e = Math.min(y, H - y);                    /* px from the nearest edge */
+      return e <= BAND ? 1 : Math.max(0, 1 - (e - BAND) / BAND_FADE);
+    }
     if (colR <= colL) return 1;
     const out = Math.max(colL - x, x - colR, 0);      /* px outside the text column */
     if (out <= CLEAR) return ghost;
@@ -267,6 +286,7 @@
       colR = r.right - (parseFloat(cs2.paddingRight) || 0);
       EDGE = Math.max(40, Math.min(EDGE_MAX, (colL - CLEAR) * 0.6));
     }
+    narrow = colL - CLEAR < 40;
     grow();
   }
 
@@ -316,7 +336,7 @@
         const j1 = Math.floor(Math.min((A + 3) / ps, (H + 3 - B) / pc));
         for (let j = j0; j <= j1; j++) {
           const x = A - j * ps, y = B + j * pc;
-          if (x > quiet0 && x < quiet1) continue;
+          if (narrow ? (y > BAND + BAND_FADE && y < H - BAND - BAND_FADE) : (x > quiet0 && x < quiet1)) continue;
           const sx = x - pl.dx, sy = y - pl.dy;
           const bxi = Math.min(bw - 1, Math.max(0, (sx / BUCKET) | 0)), byi = Math.min(bh - 1, Math.max(0, (sy / BUCKET) | 0));
           const near = buckets[byi * bw + bxi];
@@ -324,9 +344,9 @@
           const d = field(sx, sy, P, t, reach, pl.grow, near) - pl.grow;
           let cov = d > FALL ? 0 : Math.min(1, 1 - d / FALL);
           /* loose grain on the empty sheet, but none within 150px of the text */
-          const stray = Math.max(colL - x, x - colR, 0) < 150 ? 0 : 0.3;
+          const stray = narrow || Math.max(colL - x, x - colR, 0) < 150 ? 0 : 0.3;
           cov += (grain() - 0.5) * 0.2 * (cov > 0.02 ? 1 : stray);
-          cov *= guard(x, GHOST[k]);
+          cov *= guard(x, y, GHOST[k]);
           if (cov <= 0.03) continue;
           const rr = pl.pitch * 0.55 * Math.sqrt(Math.min(1, cov));
           if (rr < 0.3) continue;
@@ -360,6 +380,6 @@
     const s0 = performance.now();
     print(now - t0);
     cost = cost * 0.9 + (performance.now() - s0) * 0.1;     /* running average */
-    fps = cost > BUDGET ? FPS_LO : cost < BUDGET * 0.7 ? FPS_HI : fps;
+    fps = narrow || cost > BUDGET ? FPS_LO : cost < BUDGET * 0.7 ? FPS_HI : fps;
   })(performance.now());
 })();
