@@ -22,7 +22,7 @@
 
   const CELL   = 7;      /* css px to a block */
   const STEP   = 110;    /* ms a generation lasts */
-  const HOLD   = 60000;  /* ms each photograph rests before the next change: once a minute */
+  const HOLD   = 45000;  /* ms each photograph rests before the next change: every 45 seconds */
   const SHARE  = 0.19;   /* share of the field pixellated during a change */
   const EASE   = 0.4;    /* how hard the balancer pulls back to SHARE */
   const LIFT   = 0.16;   /* how much brighter a block sits than the photo */
