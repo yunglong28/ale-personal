@@ -457,3 +457,11 @@ footer a:hover { border-color:var(--accent); color:var(--accent); }
   .theme { top:0.9rem; }
   header { padding-top:1.5rem; }
 }
+
+/* phones: no margins to print in, so the press becomes a masthead band
+   above the name and scrolls away with the page (life-press.js) */
+@media (max-width:620px) {
+  .press { position:absolute; height:130px; }
+  header { padding-top:calc(130px + 1.2rem); }
+  .theme { top:calc(130px + 0.9rem); }
+}
