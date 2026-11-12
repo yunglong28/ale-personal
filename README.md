@@ -24,7 +24,7 @@ python3 -m http.server 8000
 
 ## Deploy
 
-Served with GitHub Pages from the `main` branch root. Every push to `main` redeploys.
+Served with GitHub Pages at https://alessandroylongo.eu from the `main` branch root. Every push to `main` redeploys.
 `.nojekyll` disables Jekyll processing so files are served as-is.
 
 ## What is in the repo
